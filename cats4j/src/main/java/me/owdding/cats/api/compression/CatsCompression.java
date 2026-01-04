@@ -6,11 +6,13 @@ import java.io.OutputStream;
 
 public final class CatsCompression {
 
+    private final String name;
     private final byte key;
     private final IoOperator<OutputStream> compressor;
     private final IoOperator<InputStream> decompressor;
 
-    CatsCompression(byte key, IoOperator<OutputStream> compressor, IoOperator<InputStream> decompressor) {
+    CatsCompression(String name, byte key, IoOperator<OutputStream> compressor, IoOperator<InputStream> decompressor) {
+        this.name = name;
         this.key = key;
         this.compressor = compressor;
         this.decompressor = decompressor;
@@ -26,6 +28,11 @@ public final class CatsCompression {
 
     public InputStream decompress(InputStream input) throws IOException {
         return decompressor.operate(input);
+    }
+
+    @Override
+    public String toString() {
+        return "CatsCompression(%s)".formatted(name);
     }
 
     @FunctionalInterface

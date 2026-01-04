@@ -36,12 +36,16 @@ public final class EntryImpl {
         private static CatsEntry.File read(DataReader reader) throws IOException {
             int offset = reader.readInt();
             int size = reader.readInt();
-            CatsCompression compression = switch (reader.readByte()) {
-                case CatsCompressions.KEY_NONE -> CatsCompressions.NONE;
-                case CatsCompressions.KEY_GZIP -> CatsCompressions.GZIP;
-                default -> throw new CatsException("Unknown compression method.");
-            };
-            return new EntryImpl.File(offset, size, compression);
+            byte compression = reader.readByte();
+            return new EntryImpl.File(
+                    offset,
+                    size,
+                    switch (compression) {
+                        case CatsCompressions.KEY_NONE -> CatsCompressions.NONE;
+                        case CatsCompressions.KEY_GZIP -> CatsCompressions.GZIP;
+                        default -> throw new CatsException("Unknown compression method: " + Byte.toUnsignedInt(compression));
+                    }
+            );
         }
     }
 
