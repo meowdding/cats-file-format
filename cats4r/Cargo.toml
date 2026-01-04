@@ -1,0 +1,9 @@
+[package]
+name = "cats_4r"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.54", features = ["derive"] }
+sha2 = "0.10.9"
+hex = "0.4.3"
