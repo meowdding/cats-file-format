@@ -76,7 +76,7 @@ fn unpack_entry(
                 println!("Unpacking {}", new_path.display());
             }
             for entry in entries {
-                unpack_entry(data, new_path.as_path(), entry, context, &eval_context)?
+                unpack_entry(data, new_path.as_path(), entry, context, &eval_context.push(name.clone()))?
             }
 
             Ok(())
