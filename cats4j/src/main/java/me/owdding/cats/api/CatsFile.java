@@ -38,6 +38,7 @@ public final class CatsFile {
         this.header = SIGNATURE_SIZE + directory.header();
         this.data = data;
         this.entries = readEntries(data, directory);
+        this.entries.put("/", directory);
     }
 
     public CatsEntry getEntry(String path) {

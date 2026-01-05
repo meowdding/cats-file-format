@@ -69,7 +69,7 @@ public final class EntryImpl {
                 var suffix = entry instanceof EntryImpl.Directory ? "/" : "";
 
                 if (!VALID_NAME.matcher(name).matches()) {
-                    throw new CatsException("Invalid entry name: " + name);
+                    throw new CatsException("Invalid entry name: '" + name + "'");
                 }
 
                 entries.put(String.format("%s%s%s", prefix, name, suffix), entry);
