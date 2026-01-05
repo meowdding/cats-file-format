@@ -88,6 +88,7 @@ fn unpack_entry(
             compression,
         } => {
             let mut new_path = PathBuf::from(path);
+            let eval_context = eval_context.push(name.clone());
             new_path.push(validate_name(name.clone(), &eval_context)?);
 
             let offset = *offset as usize;

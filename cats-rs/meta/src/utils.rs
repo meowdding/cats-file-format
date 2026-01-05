@@ -8,6 +8,7 @@ pub fn validate_name(name: String, context: &EvalContext) -> Result<String> {
         .chars()
         .all(|c| c.is_ascii_graphic() && c != '/' && c != '\\')
         && name != ".."
+        && name.len() != 0
     {
         return Ok(name);
     }
