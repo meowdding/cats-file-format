@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::error::{ErrorType, Result};
+use crate::error::{CatError, Result};
 use std::fmt::{Display, Formatter};
 use std::io::{Read, Write};
 
@@ -11,7 +11,7 @@ pub fn validate_name(name: String, context: &EvalContext) -> Result<String> {
     {
         return Ok(name);
     }
-    ErrorType::InvalidEntryName(context.clone()).into()
+    CatError::InvalidEntryName(context.clone()).into()
 }
 
 #[derive(Debug)]
@@ -109,7 +109,7 @@ pub fn read_u16(buffer: &mut impl Read) -> std::result::Result<u16, std::io::Err
 pub fn wrap_context<T, E>(
     result: std::result::Result<T, E>,
     context: EvalContext,
-    converter: fn(EvalContext, String) -> ErrorType,
+    converter: fn(EvalContext, String) -> CatError,
 ) -> Result<T>
 where
     E: Error,

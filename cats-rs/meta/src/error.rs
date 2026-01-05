@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
-pub enum ErrorType {
+pub enum CatError {
     UnknownArg,
     InvalidInput(String),
     FailedToOpenInput {
@@ -33,90 +33,78 @@ pub enum ErrorType {
     ErrorReadingMetadata(EvalContext, String),
 }
 
-impl ErrorType {
-    pub fn new(self) -> CatError {
-        CatError { error_type: self }
-    }
-}
-
-impl Into<i32> for ErrorType {
+impl Into<i32> for CatError {
     fn into(self) -> i32 {
         match self {
-            ErrorType::UnknownArg => -1,
-            ErrorType::InvalidInput(_) => -1,
-            ErrorType::FailedToOpenInput { .. } => -1,
-            ErrorType::InvalidFileType => -1,
+            CatError::UnknownArg => -1,
+            CatError::InvalidInput(_) => -1,
+            CatError::FailedToOpenInput { .. } => -1,
+            CatError::InvalidFileType => -1,
 
-            ErrorType::UnknownVersion => 1,
-            ErrorType::InvalidMetadata { .. } => 2,
-            ErrorType::FailedToCompressData { .. } => -2,
+            CatError::UnknownVersion => 1,
+            CatError::InvalidMetadata { .. } => 2,
+            CatError::FailedToCompressData { .. } => -2,
 
-            ErrorType::InvalidEntryName(_) => 100,
-            ErrorType::InvalidEntryData(_) => 101,
-            ErrorType::InvalidEntryType(_, _) => 102,
+            CatError::InvalidEntryName(_) => 100,
+            CatError::InvalidEntryData(_) => 101,
+            CatError::InvalidEntryType(_, _) => 102,
 
-            ErrorType::UnableToCreateDirectory(_) => 200,
-            ErrorType::ErrorWritingFile { .. } => 201,
-            ErrorType::ErrorReadingFile { .. } => 202,
-            ErrorType::ErrorWritingMetadata { .. } => 203,
-            ErrorType::ErrorReadingMetadata { .. } => 204,
+            CatError::UnableToCreateDirectory(_) => 200,
+            CatError::ErrorWritingFile { .. } => 201,
+            CatError::ErrorReadingFile { .. } => 202,
+            CatError::ErrorWritingMetadata { .. } => 203,
+            CatError::ErrorReadingMetadata { .. } => 204,
         }
     }
 }
 
-impl Into<CatError> for ErrorType {
-    fn into(self) -> CatError {
-        self.new()
-    }
-}
-
-impl<T> Into<std::result::Result<T, CatError>> for ErrorType {
+impl<T> Into<std::result::Result<T, CatError>> for CatError {
     fn into(self) -> std::result::Result<T, CatError> {
         Err(self.into())
     }
 }
 
-impl Display for ErrorType {
+impl Display for CatError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ErrorType::InvalidInput(path) => {
+            CatError::InvalidInput(path) => {
                 f.write_str("Invalid input path '")?;
                 f.write_str(path)?;
                 f.write_str("'")
             }
-            ErrorType::FailedToOpenInput { path, error } => {
+            CatError::FailedToOpenInput { path, error } => {
                 f.write_str("Failed to read '")?;
                 f.write_str(path)?;
                 f.write_str("' reason: ")?;
                 f.write_str(error)
             }
-            ErrorType::InvalidFileType => f.write_str("Invalid filetype"),
-            ErrorType::UnknownArg => f.write_str("Unknown Argument"),
+            CatError::InvalidFileType => f.write_str("Invalid filetype"),
+            CatError::UnknownArg => f.write_str("Unknown Argument"),
 
-            ErrorType::UnknownVersion => f.write_str("Unknown Version"),
-            ErrorType::InvalidMetadata(context) => {
+            CatError::UnknownVersion => f.write_str("Unknown Version"),
+            CatError::InvalidMetadata(context) => {
                 f.write_str("Invalid Metadata at '")?;
                 context.fmt(f)?;
                 f.write_str("'")
             }
-            ErrorType::FailedToCompressData(context, error) => {
+            CatError::FailedToCompressData(context, error) => {
                 f.write_str("Failed to compress data for '")?;
                 context.fmt(f)?;
                 f.write_str("' reason: ")?;
                 f.write_str(error)
             }
 
-            ErrorType::InvalidEntryName(context) => {
+            CatError::InvalidEntryName(context) => {
                 f.write_str("Invalid filename at '")?;
                 context.fmt(f)?;
                 f.write_str("'")
             }
-            ErrorType::InvalidEntryData(context) => {
+            CatError::InvalidEntryData(context) => {
                 f.write_str("Invalid entry data at '")?;
                 context.fmt(f)?;
                 f.write_str("'")
             }
-            ErrorType::InvalidEntryType(context, data) => {
+            CatError::InvalidEntryType(context, data) => {
                 f.write_str("Invalid entry type ")?;
                 u8::fmt(data, f)?;
                 f.write_str(" at '")?;
@@ -124,30 +112,30 @@ impl Display for ErrorType {
                 f.write_str("'")
             }
 
-            ErrorType::UnableToCreateDirectory(dir) => {
+            CatError::UnableToCreateDirectory(dir) => {
                 f.write_str("Unable to create directory '")?;
                 f.write_str(dir)?;
                 f.write_str("'")
             }
-            ErrorType::ErrorWritingFile { path, error } => {
+            CatError::ErrorWritingFile { path, error } => {
                 f.write_str("Failed to write '")?;
                 f.write_str(path)?;
                 f.write_str("' reason: ")?;
                 f.write_str(error)
             }
-            ErrorType::ErrorReadingFile { path, error } => {
+            CatError::ErrorReadingFile { path, error } => {
                 f.write_str("Failed to read '")?;
                 f.write_str(path)?;
                 f.write_str("' reason: ")?;
                 f.write_str(error)
             }
-            ErrorType::ErrorWritingMetadata(context, error) => {
+            CatError::ErrorWritingMetadata(context, error) => {
                 f.write_str("Failed to write metadata for '")?;
                 context.fmt(f)?;
                 f.write_str("' reason: ")?;
                 f.write_str(error)
             }
-            ErrorType::ErrorReadingMetadata(context, error) => {
+            CatError::ErrorReadingMetadata(context, error) => {
                 f.write_str("Failed to read metadata for '")?;
                 context.fmt(f)?;
                 f.write_str("' reason: ")?;
@@ -157,22 +145,6 @@ impl Display for ErrorType {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct CatError {
-    error_type: ErrorType,
-}
-
-impl CatError {
-    pub fn exit_code(self) -> i32 {
-        self.error_type.into()
-    }
-}
-
 impl Error for CatError {}
-impl Display for CatError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.error_type.fmt(f)
-    }
-}
 
-pub(crate) type Result<T> = std::result::Result<T, CatError>;
+pub type Result<T> = std::result::Result<T, CatError>;

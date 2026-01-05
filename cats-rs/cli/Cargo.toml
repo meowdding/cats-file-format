@@ -1,0 +1,10 @@
+[package]
+name = "cats"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+packing = { workspace = true }
+unpacking = { workspace = true }
+clap = { workspace = true }
+meta = { workspace = true }

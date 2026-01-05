@@ -1,22 +1,22 @@
 use std::io::Write;
-use crate::metadata::{Compression, Entry, Header};
-use crate::error::ErrorType;
-use crate::utils::EvalContext;
-use crate::utils::{wrap_context, write_string, write_u16, write_u32};
+use meta::metadata::{Compression, Entry, Header};
+use meta::error::CatError;
+use meta::utils::EvalContext;
+use meta::utils::{wrap_context, write_string, write_u16, write_u32};
 
 pub trait CatSerializable {
-    fn serialize(&self, writer: &mut impl Write, context: EvalContext) -> crate::error::Result<()>;
+    fn serialize(&self, writer: &mut impl Write, context: EvalContext) -> meta::error::Result<()>;
 }
 
 impl CatSerializable for Compression {
-    fn serialize(&self, writer: &mut impl Write, context: EvalContext) -> crate::error::Result<()> {
+    fn serialize(&self, writer: &mut impl Write, context: EvalContext) -> meta::error::Result<()> {
         wrap_context(
             match self {
                 Compression::Gzip => writer.write(&[0xFEu8]),
                 Compression::None => writer.write(&[0xFFu8]),
             },
             context,
-            ErrorType::ErrorWritingMetadata,
+            CatError::ErrorWritingMetadata,
         )?;
 
         Ok(())
@@ -24,30 +24,30 @@ impl CatSerializable for Compression {
 }
 
 impl CatSerializable for Entry {
-    fn serialize(&self, buffer: &mut impl Write, context: EvalContext) -> crate::error::Result<()> {
+    fn serialize(&self, buffer: &mut impl Write, context: EvalContext) -> meta::error::Result<()> {
         match self {
             Entry::Directory { name, entries } => {
                 wrap_context(
                     buffer.write(&[1]),
                     context.push("entry type".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 wrap_context(
                     write_string(name, buffer),
                     context.push("file name".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 wrap_context(
                     write_u16(
                         &wrap_context(
                             u16::try_from(entries.len()),
                             context.push("entry length".to_string()),
-                            ErrorType::ErrorWritingMetadata,
+                            CatError::ErrorWritingMetadata,
                         )?,
                         buffer,
                     ),
                     context.push("entry length".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 for x in entries {
                     x.serialize(buffer, context.push(name.to_string()))?
@@ -62,22 +62,22 @@ impl CatSerializable for Entry {
                 wrap_context(
                     buffer.write(&[0]),
                     context.push("entry type".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 wrap_context(
                     write_string(name, buffer),
                     context.push("file name".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 wrap_context(
                     write_u32(offset, buffer),
                     context.push("file offset".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 wrap_context(
                     write_u32(size, buffer),
                     context.push("file size".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?;
                 compression.serialize(
                     buffer,
@@ -94,23 +94,23 @@ impl CatSerializable for Entry {
 
 
 impl CatSerializable for Header {
-    fn serialize(&self, writer: &mut impl Write, context: EvalContext) -> crate::error::Result<()> {
+    fn serialize(&self, writer: &mut impl Write, context: EvalContext) -> meta::error::Result<()> {
         wrap_context(
             writer.write(&[self.version]),
             context.push("version".to_string()),
-            ErrorType::ErrorWritingMetadata,
+            CatError::ErrorWritingMetadata,
         )?;
         wrap_context(
             write_u16(
                 &wrap_context(
                     u16::try_from(self.entries.len()),
                     context.push("entries length".to_string()),
-                    ErrorType::ErrorWritingMetadata,
+                    CatError::ErrorWritingMetadata,
                 )?,
                 writer,
             ),
             context.push("entries length".to_string()),
-            ErrorType::ErrorWritingMetadata,
+            CatError::ErrorWritingMetadata,
         )?;
         for entries in &self.entries {
             entries.serialize(writer, context.push("head".to_string()))?

@@ -1,18 +1,11 @@
-mod deserializing;
-mod error;
-mod metadata;
-mod packing;
-mod serializing;
-mod unpacking;
-mod utils;
-
-use crate::packing::pack;
-use crate::unpacking::unpack;
+use packing::packing::pack;
+use unpacking::unpacking::unpack;
 use clap::{Arg, ArgMatches};
 use clap::{ArgAction, Command};
-use error::{ErrorType, Result};
+use meta::error::{CatError, Result};
 use std::path::{Path, PathBuf};
 use std::process::exit;
+use meta::Context;
 
 fn main() {
     let matches = Command::new("Cats Archiver")
@@ -62,7 +55,7 @@ fn main() {
         Ok(_) => exit(0),
         Err(err) => {
             eprintln!("An error occurred!\n{err}");
-            exit(err.exit_code())
+            exit(err.into())
         }
     }
 }
@@ -104,7 +97,7 @@ fn handle(matches: ArgMatches) -> Result<()> {
 
             let input = match matches.get_one::<String>("input_dir") {
                 Some(file) => Path::new(file),
-                None => Path::new("."),
+                None => Path::new("../.."),
             };
 
             pack(
@@ -116,11 +109,6 @@ fn handle(matches: ArgMatches) -> Result<()> {
                 },
             )
         }
-        _ => ErrorType::UnknownArg.into(),
+        _ => CatError::UnknownArg.into(),
     }
-}
-
-struct Context {
-    verbose: bool,
-    gzip: bool,
 }

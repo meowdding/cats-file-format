@@ -1,0 +1,10 @@
+[package]
+name = "packing"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+meta = { workspace = true }
+flate2 = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }

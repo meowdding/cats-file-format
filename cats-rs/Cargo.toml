@@ -1,10 +1,13 @@
-[package]
-name = "cats"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["meta", "packing", "unpacking", "cli"]
+resolver = "3"
 
-[dependencies]
+[workspace.dependencies]
 clap = { version = "4.5.54", features = ["derive"] }
 sha2 = "0.10.9"
 hex = "0.4.3"
 flate2 = "1.1.5"
+
+packing = { path = "./packing" }
+unpacking = { path = "./unpacking" }
+meta = { path = "./meta" }

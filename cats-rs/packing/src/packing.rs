@@ -1,8 +1,8 @@
-use crate::error::ErrorType;
-use crate::metadata::{Compression, Entry, Header, MAGIC_NUMBER};
+use meta::error::CatError;
+use meta::metadata::{Compression, Entry, Header, MAGIC_NUMBER};
 use crate::serializing::CatSerializable;
-use crate::utils::{validate_name, wrap_context, EvalContext};
-use crate::Context;
+use meta::utils::{validate_name, wrap_context, EvalContext};
+use meta::Context;
 use flate2::read::GzEncoder;
 use hex::ToHex;
 use sha2::{Digest, Sha256};
@@ -12,7 +12,7 @@ use std::fs::{DirEntry, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
 
-pub fn pack(directory: &Path, target: &Path, context: &Context) -> crate::error::Result<()> {
+pub fn pack(directory: &Path, target: &Path, context: &Context) -> meta::error::Result<()> {
     let mut serialized = HashMap::<String, EntryData>::new();
     let mut data = Vec::<u8>::new();
     let entry = create_entry(
@@ -41,26 +41,23 @@ pub fn pack(directory: &Path, target: &Path, context: &Context) -> crate::error:
         Err(err) => panic!("Failed to create file {} ({})", target.display(), err),
     };
     file.write_all(&MAGIC_NUMBER).map_err(|x| {
-        ErrorType::ErrorWritingFile {
+        CatError::ErrorWritingFile {
             path: target.display().to_string(),
             error: x.to_string(),
         }
-        .new()
     })?;
     header.serialize(&mut file, EvalContext::new("pack".to_string()))?;
     file.write_all(data.as_slice()).map_err(|x| {
-        ErrorType::ErrorWritingFile {
+        CatError::ErrorWritingFile {
             path: target.display().to_string(),
             error: x.to_string(),
         }
-        .new()
     })?;
     file.flush().map_err(|x| {
-        ErrorType::ErrorWritingFile {
+        CatError::ErrorWritingFile {
             path: target.display().to_string(),
             error: x.to_string(),
         }
-        .new()
     })?;
 
     Ok(())
@@ -78,7 +75,7 @@ fn create_entry(
     vec: &mut Vec<u8>,
     context: &Context,
     eval_context: &EvalContext,
-) -> crate::error::Result<Entry> {
+) -> meta::error::Result<Entry> {
     if path.is_dir() {
         if context.verbose {
             println!("Serializing directory {}", path.display())
@@ -122,7 +119,7 @@ fn create_entry(
                 wrap_context(
                     meow.read_to_end(&mut buff),
                     eval_context.push("gzip".to_string()),
-                    ErrorType::FailedToCompressData,
+                    CatError::FailedToCompressData,
                 )?;
                 buff
             } else {
