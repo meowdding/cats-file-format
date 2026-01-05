@@ -12,6 +12,7 @@ pub enum ErrorType {
     },
     InvalidFileType,
 
+    FailedToCompressData(EvalContext, String),
     InvalidMetadata(EvalContext),
     UnknownVersion,
 
@@ -48,6 +49,7 @@ impl Into<i32> for ErrorType {
 
             ErrorType::UnknownVersion => 1,
             ErrorType::InvalidMetadata { .. } => 2,
+            ErrorType::FailedToCompressData { .. } => -2,
 
             ErrorType::InvalidEntryName(_) => 100,
             ErrorType::InvalidEntryData(_) => 101,
@@ -96,6 +98,12 @@ impl Display for ErrorType {
                 f.write_str("Invalid Metadata at '")?;
                 context.fmt(f)?;
                 f.write_str("'")
+            }
+            ErrorType::FailedToCompressData(context, error) => {
+                f.write_str("Failed to compress data for '")?;
+                context.fmt(f)?;
+                f.write_str("' reason: ")?;
+                f.write_str(error)
             }
 
             ErrorType::InvalidEntryName(context) => {
