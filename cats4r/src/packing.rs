@@ -1,16 +1,16 @@
+use crate::error::ErrorType;
+use crate::metadata::{Compression, Entry, Header, MAGIC_NUMBER};
+use crate::serializing::CatSerializable;
+use crate::utils::{validate_name, wrap_context, EvalContext};
+use crate::Context;
+use flate2::read::GzEncoder;
+use hex::ToHex;
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
 use std::fs::{DirEntry, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
-use flate2::read::GzEncoder;
-use crate::Context;
-use crate::error::ErrorType;
-use crate::metadata::{Compression, Entry, Header, MAGIC_NUMBER};
-use crate::utils::{validate_name, wrap_context, EvalContext};
-use hex::ToHex;
-use sha2::{Digest, Sha256};
-use crate::serializing::CatSerializable;
 
 pub fn pack(directory: &Path, target: &Path, context: &Context) -> crate::error::Result<()> {
     let mut serialized = HashMap::<String, EntryData>::new();
@@ -45,7 +45,7 @@ pub fn pack(directory: &Path, target: &Path, context: &Context) -> crate::error:
             path: target.display().to_string(),
             error: x.to_string(),
         }
-            .new()
+        .new()
     })?;
     header.serialize(&mut file, EvalContext::new("pack".to_string()))?;
     file.write_all(data.as_slice()).map_err(|x| {
@@ -53,20 +53,21 @@ pub fn pack(directory: &Path, target: &Path, context: &Context) -> crate::error:
             path: target.display().to_string(),
             error: x.to_string(),
         }
-            .new()
+        .new()
     })?;
     file.flush().map_err(|x| {
         ErrorType::ErrorWritingFile {
             path: target.display().to_string(),
             error: x.to_string(),
         }
-            .new()
+        .new()
     })?;
 
     Ok(())
 }
 
 struct EntryData {
+    compression: Compression,
     size: u32,
     offset: u32,
 }
@@ -129,10 +130,22 @@ fn create_entry(
             };
             let size = u32::try_from(content.len()).expect("Failed to convert usize to u32");
 
-            serialized.insert(hash, EntryData { size, offset });
+            let compression = if context.gzip {
+                Compression::Gzip
+            } else {
+                Compression::None
+            };
+            serialized.insert(
+                hash,
+                EntryData {
+                    compression: compression.clone(),
+                    size,
+                    offset,
+                },
+            );
             vec.extend(content);
 
-            &EntryData { size, offset }
+            &EntryData { size, offset, compression }
         };
         let name = path.file_name().unwrap().to_str().unwrap().to_string();
 
@@ -140,7 +153,7 @@ fn create_entry(
             name: validate_name(name.clone(), eval_context)?,
             offset: data.offset,
             size: data.size,
-            compression: Compression::None,
+            compression: data.compression.clone(),
         });
     }
 
