@@ -1,6 +1,6 @@
 use crate::utils::EvalContext;
 use std::error::Error;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub enum ErrorType {
